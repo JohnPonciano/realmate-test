@@ -141,6 +141,3 @@ Cada request já está pré-configurado com:
 - IDs de mensagens e conversas são únicos (UUID)
 - Sistema trata erros graciosamente
 
-## 📧 Dúvidas e Suporte
-
-Em caso de dúvidas, entre em contato pelo e-mail: tecnologia@realmate.com.br
