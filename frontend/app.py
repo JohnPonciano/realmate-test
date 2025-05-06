@@ -223,13 +223,22 @@ def main():
 
         # Campo pra digitar mensagem - só aparece se a conversa tiver aberta
         if conversation_state == "OPEN":
+            # Container único para o campo de mensagem e botões
             with st.container():
-                # Usa colunas pra alinhar o botão com o campo de texto
+                # Remove o label do campo de texto para alinhar melhor com os botões
                 col1, col2, col3 = st.columns([6, 2, 2])
                 with col1:
-                    message = st.text_input("Digite sua mensagem:", key="message_input")
+                    # Usa empty para criar espaço e alinhar com os botões
+                    st.write("")
+                    message = st.text_input(
+                        "Digite sua mensagem:",
+                        key="message_input",
+                        label_visibility="collapsed"  # Esconde o label mas mantém acessibilidade
+                    )
                 with col2:
-                    if st.button("📤 Enviar", use_container_width=True):
+                    # Usa empty para criar espaço e alinhar com o campo de texto
+                    st.write("")
+                    if st.button("📤 Enviar", use_container_width=True, key="send_button"):
                         if message:
                             if send_message(conversation_id, message, "SENT"):
                                 # Atualiza pra mostrar a mensagem nova
@@ -238,8 +247,9 @@ def main():
                                     st.session_state.messages = conversation.get("messages", [])
                                 st.rerun()
                 with col3:
-                    # Botão pra simular resposta do cliente - só pra teste mesmo
-                    if st.button("👥 Simular Cliente", use_container_width=True):
+                    # Usa empty para criar espaço e alinhar com o campo de texto
+                    st.write("")
+                    if st.button("👥 Simular", use_container_width=True, key="simulate_button"):
                         if send_message(conversation_id, "Esta é uma resposta simulada do cliente!", "RECEIVED"):
                             conversation = get_conversation(conversation_id)
                             if conversation:
