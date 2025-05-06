@@ -7,6 +7,28 @@ import pytz
 # URL da nossa API Django - se mudar a porta, muda aqui!
 API_URL = "http://localhost:8000"
 
+def get_all_conversations():
+    """Busca todas as conversas da API"""
+    try:
+        # Faz um GET na API pra listar todas as conversas
+        response = requests.get(f"{API_URL}/conversations/")
+        if response.status_code == 200:
+            conversations = response.json()
+            # Atualiza o histórico com todas as conversas
+            st.session_state.conversation_history = [
+                {
+                    "id": conv["id"],
+                    "created_at": conv.get("created_at", datetime.now(pytz.UTC).isoformat()),
+                    "state": conv["state"]
+                }
+                for conv in conversations
+            ]
+            return True
+        return False
+    except Exception as e:
+        st.error(f"Erro ao buscar conversas: {str(e)}")
+        return False
+
 def create_conversation():
     # Gera um UUID único pra conversa - isso evita conflitos de ID
     conversation_id = str(uuid.uuid4())
@@ -24,14 +46,8 @@ def create_conversation():
     )
     
     if response.status_code == 201:
-        # Deu bom! Vamo guardar no histórico pra não perder, o historico é temporario, então se atualizar a apagina ele some junto, o ideal seria salvar no banco de dados
-        if "conversation_history" not in st.session_state:
-            st.session_state.conversation_history = []
-        st.session_state.conversation_history.append({
-            "id": conversation_id,
-            "created_at": datetime.now(pytz.UTC).isoformat(),
-            "state": "OPEN"
-        })
+        # Atualiza o histórico completo
+        get_all_conversations()
         st.success("Conversa criada com sucesso!")
         return conversation_id
     else:
@@ -73,12 +89,8 @@ def close_conversation(conversation_id):
         }
     )
     if response.status_code in [200, 201]:
-        # Atualiza o status no histórico pra mostrar que fechou
-        if "conversation_history" in st.session_state:
-            for conv in st.session_state.conversation_history:
-                if conv["id"] == conversation_id:
-                    conv["state"] = "CLOSED"
-                    break
+        # Atualiza o histórico completo
+        get_all_conversations()
         st.success("Conversa fechada com sucesso!")
         return True
     else:
@@ -90,20 +102,12 @@ def get_conversation(conversation_id):
     response = requests.get(f"{API_URL}/conversations/{conversation_id}/")
     if response.status_code == 200:
         data = response.json()
-        # Se a conversa não tá no histórico ainda, adiciona
+        # Atualiza o estado no histórico
         if "conversation_history" in st.session_state:
-            found = False
             for conv in st.session_state.conversation_history:
                 if conv["id"] == conversation_id:
                     conv["state"] = data["state"]
-                    found = True
                     break
-            if not found:
-                st.session_state.conversation_history.append({
-                    "id": conversation_id,
-                    "created_at": datetime.now(pytz.UTC).isoformat(),
-                    "state": data["state"]
-                })
         return data
     else:
         st.error(f"Erro ao buscar conversa: {response.json()}")
@@ -123,19 +127,25 @@ def main():
 
     st.title("💬 Realmate Challenge - Chat")
 
-    # Cria o histórico vazio
+    # Primeira vez ou atualização? Busca todas as conversas!
     if "conversation_history" not in st.session_state:
-        st.session_state.conversation_history = []
+        get_all_conversations()
 
     # Sidebar - aqui fica o controle das conversas
     with st.sidebar:
         st.header("Ações")
-        if st.button("🆕 Nova Conversa"):
-            conversation_id = create_conversation()
-            if conversation_id:
-                st.session_state.conversation_id = conversation_id
-                st.session_state.messages = []
-                st.rerun()  # Recarrega pra mostrar a nova conversa
+        col1, col2 = st.columns([3,1])
+        with col1:
+            if st.button("🆕 Nova Conversa", use_container_width=True):
+                conversation_id = create_conversation()
+                if conversation_id:
+                    st.session_state.conversation_id = conversation_id
+                    st.session_state.messages = []
+                    st.rerun()
+        with col2:
+            if st.button("🔄", help="Atualizar histórico", use_container_width=True):
+                get_all_conversations()
+                st.rerun()
 
         st.divider()
         
@@ -148,17 +158,21 @@ def main():
         
         if conversation_id:
             st.session_state.conversation_id = conversation_id
-            if st.button("🔄 Atualizar Conversa"):
-                # Busca as mensagens mais recentes
-                conversation = get_conversation(conversation_id)
-                if conversation:
-                    st.session_state.messages = conversation.get("messages", [])
-                    st.session_state.conversation_state = conversation.get("state")
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("🔄 Atualizar", use_container_width=True):
+                    # Busca as mensagens mais recentes
+                    conversation = get_conversation(conversation_id)
+                    if conversation:
+                        st.session_state.messages = conversation.get("messages", [])
+                        st.session_state.conversation_state = conversation.get("state")
+                        st.rerun()
 
-            if st.button("❌ Fechar Conversa"):
-                if close_conversation(conversation_id):
-                    st.session_state.conversation_state = "CLOSED"
-                    st.rerun()
+            with col2:
+                if st.button("❌ Fechar", use_container_width=True):
+                    if close_conversation(conversation_id):
+                        st.session_state.conversation_state = "CLOSED"
+                        st.rerun()
 
         # Lista todas as conversas que já rolaram
         st.divider()
@@ -172,7 +186,8 @@ def main():
                     # Mostra 🔓 pra aberta e 🔒 pra fechada
                     if st.button(
                         f"{'🔓' if conv['state'] == 'OPEN' else '🔒'} {format_conversation_id(conv['id'])}",
-                        key=f"history_{conv['id']}"
+                        key=f"history_{conv['id']}",
+                        use_container_width=True
                     ):
                         st.session_state.conversation_id = conv["id"]
                         conversation = get_conversation(conv["id"])
@@ -209,11 +224,12 @@ def main():
         # Campo pra digitar mensagem - só aparece se a conversa tiver aberta
         if conversation_state == "OPEN":
             with st.container():
-                col1, col2 = st.columns([4, 1])
+                # Usa colunas pra alinhar o botão com o campo de texto
+                col1, col2, col3 = st.columns([6, 2, 2])
                 with col1:
                     message = st.text_input("Digite sua mensagem:", key="message_input")
                 with col2:
-                    if st.button("Enviar"):
+                    if st.button("📤 Enviar", use_container_width=True):
                         if message:
                             if send_message(conversation_id, message, "SENT"):
                                 # Atualiza pra mostrar a mensagem nova
@@ -221,14 +237,14 @@ def main():
                                 if conversation:
                                     st.session_state.messages = conversation.get("messages", [])
                                 st.rerun()
-                
-                # Botão pra simular resposta do cliente - só pra teste mesmo
-                if st.button("Simular resposta do cliente"):
-                    if send_message(conversation_id, "Esta é uma resposta simulada do cliente!", "RECEIVED"):
-                        conversation = get_conversation(conversation_id)
-                        if conversation:
-                            st.session_state.messages = conversation.get("messages", [])
-                        st.rerun()
+                with col3:
+                    # Botão pra simular resposta do cliente - só pra teste mesmo
+                    if st.button("👥 Simular Cliente", use_container_width=True):
+                        if send_message(conversation_id, "Esta é uma resposta simulada do cliente!", "RECEIVED"):
+                            conversation = get_conversation(conversation_id)
+                            if conversation:
+                                st.session_state.messages = conversation.get("messages", [])
+                            st.rerun()
         else:
             st.warning("Esta conversa está fechada. Não é possível enviar novas mensagens.")
     else:

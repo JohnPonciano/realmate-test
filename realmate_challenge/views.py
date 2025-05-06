@@ -155,3 +155,10 @@ class ConversationDetailView(generics.RetrieveAPIView):
     queryset = Conversation.objects.all()
     # Usa o ConversationSerializer pra transformar em JSON
     serializer_class = ConversationSerializer
+
+# View pra listar todas as conversas
+class ConversationListView(generics.ListAPIView):
+    # Pega todas as conversas do banco
+    queryset = Conversation.objects.all().order_by('-created_at')
+    # Usa o mesmo serializer da view de detalhes
+    serializer_class = ConversationSerializer

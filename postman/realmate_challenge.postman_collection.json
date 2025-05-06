@@ -116,6 +116,21 @@
 				},
 				"description": "Get details of a specific conversation including all messages"
 			}
+		},
+		{
+			"name": "Get All Conversation Details",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/conversations",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "8000",
+					"path": ["conversations", ""]
+				},
+				"description": "Get all details of a all conversation including all messages"
+			}
 		}
 	]
 } 
