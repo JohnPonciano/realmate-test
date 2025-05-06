@@ -1,0 +1,121 @@
+{
+	"info": {
+		"_postman_id": "b5b7b7b7-b7b7-b7b7-b7b7-b7b7b7b7b7b7",
+		"name": "Realmate Challenge",
+		"description": "Collection for testing the Realmate Challenge API endpoints",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create New Conversation",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"type\": \"NEW_CONVERSATION\",\n    \"timestamp\": \"2025-02-21T10:20:41.349308\",\n    \"data\": {\n        \"id\": \"6a41b347-8d80-4ce9-84ba-7af66f369f6a\"\n    }\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8000/webhook/",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "8000",
+					"path": ["webhook", ""]
+				},
+				"description": "Create a new conversation"
+			}
+		},
+		{
+			"name": "Add Received Message",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"type\": \"NEW_MESSAGE\",\n    \"timestamp\": \"2025-02-21T10:20:42.349308\",\n    \"data\": {\n        \"id\": \"49108c71-4dca-4af3-9f32-61bc745926e2\",\n        \"direction\": \"RECEIVED\",\n        \"content\": \"Olá, tudo bem?\",\n        \"conversation_id\": \"6a41b347-8d80-4ce9-84ba-7af66f369f6a\"\n    }\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8000/webhook/",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "8000",
+					"path": ["webhook", ""]
+				},
+				"description": "Add a received message to a conversation"
+			}
+		},
+		{
+			"name": "Add Sent Message",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"type\": \"NEW_MESSAGE\",\n    \"timestamp\": \"2025-02-21T10:20:44.349308\",\n    \"data\": {\n        \"id\": \"16b63b04-60de-4257-b1a1-20a5154abc6d\",\n        \"direction\": \"SENT\",\n        \"content\": \"Tudo ótimo e você?\",\n        \"conversation_id\": \"6a41b347-8d80-4ce9-84ba-7af66f369f6a\"\n    }\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8000/webhook/",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "8000",
+					"path": ["webhook", ""]
+				},
+				"description": "Add a sent message to a conversation"
+			}
+		},
+		{
+			"name": "Close Conversation",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"type\": \"CLOSE_CONVERSATION\",\n    \"timestamp\": \"2025-02-21T10:20:45.349308\",\n    \"data\": {\n        \"id\": \"6a41b347-8d80-4ce9-84ba-7af66f369f6a\"\n    }\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8000/webhook/",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "8000",
+					"path": ["webhook", ""]
+				},
+				"description": "Close an existing conversation"
+			}
+		},
+		{
+			"name": "Get Conversation Details",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/conversations/6a41b347-8d80-4ce9-84ba-7af66f369f6a/",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "8000",
+					"path": ["conversations", "6a41b347-8d80-4ce9-84ba-7af66f369f6a", ""]
+				},
+				"description": "Get details of a specific conversation including all messages"
+			}
+		}
+	]
+} 
